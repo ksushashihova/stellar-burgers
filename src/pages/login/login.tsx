@@ -1,5 +1,4 @@
 import { FC, SyntheticEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { LoginUI } from '@ui-pages';
 
@@ -11,7 +10,6 @@ export const Login: FC = () => {
   const [password, setPassword] = useState('');
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const error = useSelector((state) => state.auth.error);
 
@@ -23,14 +21,7 @@ export const Login: FC = () => {
         email,
         password
       })
-    )
-      .unwrap()
-      .then(() => {
-        navigate('/');
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    );
   };
 
   return (

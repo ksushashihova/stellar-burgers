@@ -10,8 +10,6 @@ import {
 import { TUser } from '../../utils/types';
 import { setCookie } from '../../utils/cookie';
 
-// ================= LOGIN =================
-
 export const login = createAsyncThunk(
   'auth/login',
   async (data: { email: string; password: string }, { rejectWithValue }) => {
@@ -29,30 +27,31 @@ export const login = createAsyncThunk(
   }
 );
 
-// ================= REGISTER =================
-
 export const register = createAsyncThunk(
   'auth/register',
-  async (data: { email: string; password: string; name: string }) => {
-    const response = await registerUserApi(data);
+  async (
+    data: { email: string; password: string; name: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await registerUserApi(data);
 
-    localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      setCookie('accessToken', response.accessToken);
 
-    setCookie('accessToken', response.accessToken);
-
-    return response.user;
+      return response.user;
+    } catch (error) {
+      console.log(error);
+      return rejectWithValue(error);
+    }
   }
 );
-
-// ================= CHECK USER =================
 
 export const checkUser = createAsyncThunk('auth/checkUser', async () => {
   const response = await getUserApi();
 
   return response.user;
 });
-
-// ================= UPDATE USER =================
 
 export const updateUser = createAsyncThunk(
   'auth/updateUser',
@@ -63,8 +62,6 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-// ================= LOGOUT =================
-
 export const logout = createAsyncThunk('auth/logout', async () => {
   await logoutApi();
 
@@ -72,8 +69,6 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 
   setCookie('accessToken', '', { expires: -1 });
 });
-
-// ================= STATE =================
 
 type AuthState = {
   user: TUser | null;
@@ -89,8 +84,6 @@ const initialState: AuthState = {
   error: null
 };
 
-// ================= SLICE =================
-
 const authSlice = createSlice({
   name: 'auth',
 
@@ -100,8 +93,6 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-
-      // LOGIN
 
       .addCase(login.pending, (state) => {
         state.isLoading = true;
@@ -123,8 +114,6 @@ const authSlice = createSlice({
             : 'Неверный email или пароль';
       })
 
-      // REGISTER
-
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -138,10 +127,12 @@ const authSlice = createSlice({
 
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Ошибка регистрации';
-      })
 
-      // CHECK USER
+        state.error =
+          typeof action.payload === 'string'
+            ? action.payload
+            : 'Ошибка регистрации';
+      })
 
       .addCase(checkUser.pending, (state) => {
         state.isLoading = true;
@@ -159,8 +150,6 @@ const authSlice = createSlice({
         state.isAuthChecked = true;
       })
 
-      // UPDATE USER
-
       .addCase(updateUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -175,8 +164,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.error.message || 'Ошибка обновления данных';
       })
-
-      // LOGOUT
 
       .addCase(logout.fulfilled, (state) => {
         state.user = null;

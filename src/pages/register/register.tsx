@@ -1,16 +1,16 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RegisterUI } from '@ui-pages';
-import { useDispatch } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
 import { register } from '../../services/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
 
 export const Register: FC = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [userName, setUserName] = useState('');
+
+  const error = useSelector((state) => state.auth.error);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
@@ -21,16 +21,12 @@ export const Register: FC = () => {
         password,
         name: userName
       })
-    )
-      .unwrap()
-      .then(() => {
-        navigate('/');
-      });
+    );
   };
 
   return (
     <RegisterUI
-      errorText=''
+      errorText={error ?? ''}
       email={email}
       setEmail={setEmail}
       password={password}
