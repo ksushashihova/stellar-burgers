@@ -16,6 +16,7 @@
 
 .link {
   display: flex;
+  align-items: center;
   text-decoration: none;
   color: var(--text-inactive-color);
 }
@@ -27,7 +28,14 @@
 .link_position_last {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   flex-basis: 35%;
+  text-decoration: none;
+  color: var(--text-inactive-color);
+}
+
+.link_position_last.link_active {
+  color: var(--text-primary-color);
 }
 
 .logo {
