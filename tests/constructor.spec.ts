@@ -1,32 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-
-const orderMock = {
-  success: true,
-  name: 'Космический бургер',
-  order: {
-    number: 12345
-  }
-};
-
-const userMock = {
-  success: true,
-  user: {
-    email: 'test@test.ru',
-    name: 'Test User'
-  }
-};
-
-
 test.beforeEach(async ({ page }) => {
 
-  await page.routeFromHAR(
-    './tests/hars/ingredients.har',
-    {
-      url: '**/api/ingredients',
-      update: false
-    }
-  );
+  await page.routeFromHAR('./tests/hars/api.har', {
+  url: '**/api/**',
+  update: false,
+  notFound: 'abort'
+});
 
 
   await page.goto('/');
@@ -34,32 +14,39 @@ test.beforeEach(async ({ page }) => {
 
 
 test('добавление ингредиента в конструктор', async ({ page }) => {
+  await expect(
+    page.getByText('Выберите начинку')
+  ).toBeVisible();
+
   await page
-  .getByText('Тестовая булка')
-  .locator('..')
-  .locator('..')
-  .getByRole('button', { name: 'Добавить' })
-  .click();
-
-  const ingredientCard = page
-    .getByText('Тестовая начинка')
+    .getByText('Тестовая булка')
     .locator('..')
-    .locator('..');
-
-
-  await ingredientCard
+    .locator('..')
     .getByRole('button', { name: 'Добавить' })
     .click();
 
+  await page
+    .getByText('Тестовая начинка')
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: 'Добавить' })
+    .click();
 
   await expect(
-    page.getByText('Тестовая начинка').last()
-  ).toBeVisible();
+    page.getByText('Выберите начинку')
+  ).not.toBeVisible();
 
+  const constructor = page.locator('main').locator('section').nth(1);
+
+  await expect(
+    constructor.getByText('Тестовая начинка')
+  ).toBeVisible();
 });
 
-
 test('открытие модального окна ингредиента', async ({ page }) => {
+  const modal = page.locator('#modals');
+
+  await expect(modal).not.toContainText('Тестовая начинка');
 
   await page
     .getByRole('link', {
@@ -67,11 +54,13 @@ test('открытие модального окна ингредиента', as
     })
     .click();
 
-
   await expect(
-    page.getByText('Калории, ккал')
+    modal.getByText('Тестовая начинка')
   ).toBeVisible();
 
+  await expect(
+    modal.getByText('Калории, ккал')
+  ).toBeVisible();
 });
 
 test('закрытие модального окна по крестику', async ({ page }) => {
@@ -149,25 +138,6 @@ test('создание заказа', async ({ page, context }) => {
       path: '/'
     }
   ]);
-
-
-  await page.route('**/orders', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(orderMock)
-    });
-  });
-
-  await page.route('**/auth/user', async route => {
-  await route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify(userMock)
-  });
-});
-  await page.goto('/');
-
 
   await page
     .getByText('Тестовая булка')
